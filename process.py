@@ -1,8 +1,11 @@
+import asyncio
+
 import pandas as pd
 import pymongo
 from bson import ObjectId
 
 from geocode import geocode
+from tasks import CloudTask
 
 mongo = pymongo.MongoClient(
     'mongodb+srv://jonathan:9VTFu2dV77EGGnVu@cluster4.uz1yi.mongodb.net/?retryWrites=true&w=majority')
@@ -48,22 +51,39 @@ def process_and_update(x):
     return True
 
 
-def send_task(x):
-    pass
+async def send_task(x):
+    task_manager = CloudTask()
+    await task_manager.create_task('https://p2p-analysis-qndxoltwga-uc.a.run.app/', "/process",
+                                   x)
 
 
-def process_entries():
+async def process_entries():
     f = {'processed': {'$exists': False}}
-    to_process = db.find(f)
-
+    to_process = db.find(f).limit(100)
+    to_mark = []
     for x in to_process:
         try:
-            send_task(x)
+            # print(json.dumps(x, cls=JSONEncoder))
+            await send_task(x)
+            to_mark.append(x['_id'])
         except Exception as e:
             print(e)
 
+    if len(to_mark) > 0:
+        payload = {
+            '_id': {
+                '$in': [ObjectId(z) for z in to_mark]
+            }
+        }
+        update = {
+                '$set': {
+                    'processed': True
+                }
+            }
+        result = db.update_many(payload, update)
+        print(result.matched_count, result.modified_count)
     return True
 
 
 if __name__ == '__main__':
-    process_entries()
+    asyncio.run(process_entries())

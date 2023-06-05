@@ -1,8 +1,12 @@
 import json
 import logging
 import os
+from bson import json_util
+
 
 from google.cloud import tasks_v2
+
+import encoder
 
 
 class CloudTask:
@@ -27,7 +31,7 @@ class CloudTask:
                 "url": f"{base_url}{endpoint.strip('/')}",
             }
         }
-        payload = json.dumps(request_payload)
+        payload = json.dumps(request_payload, cls=encoder.JSONEncoder)
         task["http_request"]["body"] = payload.encode()
 
         response = self.task_client.create_task(request={"parent": self.task_parent, "task": task})

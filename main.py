@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from process import process_and_update
+from process import process_and_update, process_entries
 import os
 
 app = Flask(__name__)
@@ -16,6 +16,12 @@ def process_json():
         # Handle any exceptions that occurred during processing
         result = {'status': 'error', 'message': str(e)}
         return jsonify(result), 204
+
+
+@app.route('/queue', methods=['GET'])
+async def enqueue():
+    await process_entries()
+    return {}, 200
 
 
 if __name__ == '__main__':
