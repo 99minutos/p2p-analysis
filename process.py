@@ -46,13 +46,17 @@ def process_and_update(x):
     return True
 
 
+def send_task(x):
+    pass
+
+
 def process_entries():
     f = {'processed': {'$exists': False}}
     to_process = db.find(f)
 
     for x in to_process:
         try:
-            process_and_update(x)
+            send_task(x)
         except Exception as e:
             print(e)
 
