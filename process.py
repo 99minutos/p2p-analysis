@@ -1,5 +1,6 @@
 import pandas as pd
 import pymongo
+from bson import ObjectId
 
 from geocode import geocode
 
@@ -42,7 +43,8 @@ def read_excel():
 
 def process_and_update(x):
     location = geocode(x['buyerAddress1'], str(x['zipCode']).zfill(5), x['adminLevel3'])
-    db.update_one({'_id': x['_id']}, {'$set': {'processed': True, **location}})
+    result = db.update_one({'_id': ObjectId(x['_id'])}, {'$set': {'processed': True, **location}})
+    print(location, result.matched_count, result.modified_count)
     return True
 
 

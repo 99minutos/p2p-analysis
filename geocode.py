@@ -2,6 +2,21 @@ import requests
 import urllib.parse
 
 
+def geocode2(address, zipcode, locality):
+    print('GOOGLE: {}'.format(address))
+    url = "https://geocoding-private-qndxoltwga-uc.a.run.app/geocode"
+    params = {
+        "address": "{} {} {}".format(address, zipcode, locality),
+        "country": "MEX",
+    }
+    response = requests.post(url, json=params)
+    data = response.json()
+    return {
+        **data['location'],
+        **data
+    }
+
+
 def geocode(address, zipcode, locality):
     # Set up the Geocoding url
     url = "https://api.deyde.com/deyde-ws/deydePlusJson"
@@ -12,25 +27,25 @@ def geocode(address, zipcode, locality):
         "toNormalize": "{} {} {}".format(address, zipcode, locality)
     }
 
-    print('Geocoding: {}'.format(params['toNormalize']))
+    print('DEYDE: {}'.format(params['toNormalize']))
     # Encode the parameters
     encoded_params = urllib.parse.urlencode(params)
 
     # Combine the URL and encoded parameters
     new_url = url + "?" + encoded_params
 
-    # Print the new URL
-    print(new_url)
-
     response = requests.get(new_url)
 
     data = response.json()
     loc = data['deydePlusResult']
 
-    location = {
-        'lat': float(loc['coordYG']),
-        'lng': float(loc['coordXG']),
-        **loc
-    }
+    try:
+        location = {
+            'lat': float(loc['coordYG']),
+            'lng': float(loc['coordXG']),
+            **loc
+        }
+    except Exception as e:
+        return geocode2(address, zipcode, locality)
 
     return location
