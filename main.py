@@ -38,11 +38,6 @@ async def enqueue():
     await process_entries()
     return {}, 200
 
-@app.route('/queue/shipments', methods=['GET'])
-async def enqueue():
-    await process_shipments()
-    return {}, 200
-
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
