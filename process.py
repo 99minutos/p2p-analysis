@@ -60,28 +60,14 @@ async def send_task(x):
 async def process_entries():
     f = {'processed': {'$exists': False}}
     to_process = db.find(f).limit(100)
-    to_mark = []
     for x in to_process:
         try:
-            # print(json.dumps(x, cls=JSONEncoder))
+            result = db.update_one({'_id': ObjectId(x['_id'])}, {'$set': {'processed': True}})
             await send_task(x)
-            to_mark.append(x['_id'])
+
         except Exception as e:
             print(e)
 
-    if len(to_mark) > 0:
-        payload = {
-            '_id': {
-                '$in': [ObjectId(z) for z in to_mark]
-            }
-        }
-        update = {
-                '$set': {
-                    'processed': True
-                }
-            }
-        result = db.update_many(payload, update)
-        print(result.matched_count, result.modified_count)
     return True
 
 
