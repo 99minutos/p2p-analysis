@@ -60,7 +60,7 @@ async def send_task(x):
 
 async def process_entries():
     f = {'processed': {'$exists': False}}
-    to_process = db.find(f).limit(1000)
+    to_process = db.find(f).limit(5000)
     to_mark = []
 
     for x in to_process:
