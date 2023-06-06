@@ -11,6 +11,8 @@ mongo = pymongo.MongoClient(
     'mongodb+srv://jonathan:9VTFu2dV77EGGnVu@cluster4.uz1yi.mongodb.net/?retryWrites=true&w=majority')
 db = mongo['p2p']['analysis']
 
+task_manager = CloudTask()
+
 
 def convert_keys_to_camel_case(dictionary):
     return {to_camel_case(key): value for key, value in dictionary.items()}
@@ -52,22 +54,34 @@ def process_and_update(x):
 
 
 async def send_task(x):
-    task_manager = CloudTask()
     await task_manager.create_task('https://p2p-analysis-qndxoltwga-uc.a.run.app/', "/process",
                                    x)
 
 
 async def process_entries():
     f = {'processed': {'$exists': False}}
-    to_process = db.find(f).limit(100)
+    to_process = db.find(f).limit(1000)
+    to_mark = []
+
     for x in to_process:
-        try:
-            result = db.update_one({'_id': ObjectId(x['_id'])}, {'$set': {'processed': True}})
-            await send_task(x)
+        to_mark.append(x)
 
-        except Exception as e:
-            print(e)
+    if len(to_mark) > 0:
+        payload = {
+            '_id': {
+                '$in': [ObjectId(z['_id']) for z in to_mark]
+            }
+        }
+        update = {
+            '$set': {
+                'processed': True
+            }
+        }
+        result = db.update_many(payload, update)
+        print(result.matched_count, result.modified_count)
 
+        for y in to_mark:
+            await send_task(y)
     return True
 
 
