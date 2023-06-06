@@ -58,8 +58,13 @@ async def send_task(x):
                                    x)
 
 
+async def send_task_shipment(x):
+    await task_manager.create_task('https://p2p-analysis-qndxoltwga-uc.a.run.app/', "/belongs_to_p99",
+                                   x)
+
+
 async def process_entries():
-    f = {'processed': {'$exists': False}}
+    f = {'p99_processed': {'$exists': False}}
     to_process = db.find(f).limit(5000)
     to_mark = []
 
@@ -74,14 +79,14 @@ async def process_entries():
         }
         update = {
             '$set': {
-                'processed': True
+                'p99_processed': True
             }
         }
         result = db.update_many(payload, update)
         print(result.matched_count, result.modified_count)
 
         for y in to_mark:
-            await send_task(y)
+            await send_task_shipment(y)
     return True
 
 
